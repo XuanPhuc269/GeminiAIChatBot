@@ -10,7 +10,6 @@ import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class HomeViewModel: ViewModel() {
@@ -24,11 +23,11 @@ class HomeViewModel: ViewModel() {
         val config = generationConfig {
             temperature = 0.70f // 0 to 1
         }
-        val generativeModel = GenerativeModel(
-            modelName = "gemini-pro-vision",
-            apiKey = BuildConfig.apiKey,
-            generationConfig = config
-        )
+//        val generativeModel = GenerativeModel(
+//            modelName = "gemini-pro-vision",
+//            apiKey = BuildConfig.apiKey,
+//            generationConfig = config
+//        )
     }
 
     fun questioning(userInput: String,
