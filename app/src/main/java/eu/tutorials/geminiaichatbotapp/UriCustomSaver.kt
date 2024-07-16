@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 
-class UriCustomServer: Saver<MutableList<Uri>, List<String>> {
+class UriCustomSaver: Saver<MutableList<Uri>, List<String>> {
     override fun restore(value: List<String>): MutableList<Uri>? {
         return value.map { Uri.parse(it) }.toMutableList()
     }

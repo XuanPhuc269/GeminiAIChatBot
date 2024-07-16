@@ -3,7 +3,6 @@ package eu.tutorials.geminiaichatbotapp
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.ai.client.generativeai.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
@@ -23,22 +22,24 @@ class HomeViewModel: ViewModel() {
         val config = generationConfig {
             temperature = 0.70f // 0 to 1
         }
-//        val generativeModel = GenerativeModel(
-//            modelName = "gemini-pro-vision",
-//            apiKey = BuildConfig.apiKey,
-//            generationConfig = config
-//        )
+        generativeModel = GenerativeModel(
+            modelName = "gemini-1.5-flash-latest",
+            apiKey = BuildConfig.apiKey,
+            generationConfig = config
+        )
     }
 
-    fun questioning(userInput: String,
-                    selectionImages: List<Bitmap>) {
+    fun questioning(
+        userInput: String,
+        selectedImages: List<Bitmap>
+    ) {
         _uiState.value = HomeUIState.Loading
         val prompt = "Take a look at images, and then answer the following question: $userInput"
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val content = content {
-                    for (bitmap in selectionImages) {
+                    for (bitmap in selectedImages) {
                         image(bitmap)
                     }
                     text(prompt)

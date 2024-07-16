@@ -1,11 +1,20 @@
 package eu.tutorials.geminiaichatbotapp
 
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -28,24 +38,50 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun AppContent(viewModel: HomeViewModel = viewModel()) {
     val appUIState = viewModel.uiState.collectAsState()
 
+    val coroutineScope = rememberCoroutineScope()
+    val imageRequestBuilder = ImageRequest.Builder(LocalContext.current)
+    val imageLoader = ImageLoader.Builder(LocalContext.current).build()
+
+
     HomeScreenView(
         uiState = appUIState.value
-    ) {
-        inputText, selectedItems ->
+    ) { inputText, selectedItems ->
+        coroutineScope.launch {
+            val bitmaps = selectedItems.mapNotNull {
+                val imageRequest = imageRequestBuilder
+                    .data(it)
+                    .size(size = 768)
+                    .build()
+
+                val imageResult = imageLoader.execute(imageRequest)
+                if (imageResult is SuccessResult) {
+                    return@mapNotNull (imageResult.drawable as BitmapDrawable).bitmap
+                } else {
+                    return@mapNotNull null
+                }
+            }
+
+            viewModel.questioning(userInput = inputText, selectedImages = bitmaps)
+        }
     }
 }
 
@@ -58,8 +94,15 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
         mutableStateOf("")
     }
 
-    val imageUris = rememberSaveable(saver = UriCustomServer()) {
+    val imageUris = rememberSaveable(saver = UriCustomSaver()) {
         mutableStateListOf()
+    }
+
+    val pickMediaLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts
+        .PickVisualMedia()) { imageUri ->
+        imageUri?.let {
+            imageUris.add(it)
+        }
     }
 
     Scaffold(
@@ -75,10 +118,14 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
         bottomBar = {
             Column {
                 Row(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically
                 ){
                     // Add image Icon
-                    IconButton(onClick = { /*TODO*/ },
+                    IconButton(onClick = {
+                                         pickMediaLauncher
+                                             .launch(PickVisualMediaRequest(
+                                                 ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
                         modifier = Modifier.padding(4.dp)) {
                         Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Image")
                     }
@@ -88,13 +135,38 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
                         onValueChange = {
                             userQuestion = it
                         },
-                        placeholder = { Text(text = "Upload image and ask question") }
+                        label = { Text(text = "User Input")},
+                        placeholder = { Text(text = "Upload image and ask question") },
+
                     )
 
                     // Send Button
-                    IconButton(onClick = { /*TODO*/ },
+                    IconButton(onClick = {
+                                         if (userQuestion.isNotBlank()) {
+                                             onSendClicked(userQuestion, imageUris)
+                                         }
+                    },
                         modifier = Modifier.padding(4.dp)) {
                         Icon(imageVector = Icons.Default.Send, contentDescription = "Send")
+                    }
+                    
+                    AnimatedVisibility(visible = imageUris.size > 0) {
+                        LazyRow(
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            items(imageUris) { imageUri ->
+                                Column (verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally){
+                                    AsyncImage(model = imageUri, contentDescription = "",
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .requiredSize(50.dp))
+                                    TextButton(onClick = { imageUris.remove(imageUri) }) {
+                                        Text(text = "Remove")
+                                    }
+                                }
+                            }
+                        }
                     }
 
                 }
