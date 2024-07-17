@@ -118,7 +118,8 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
         bottomBar = {
             Column {
                 Row(
-                    modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ){
                     // Add image Icon
                     IconButton(onClick = {
@@ -137,6 +138,7 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
                         },
                         label = { Text(text = "User Input")},
                         placeholder = { Text(text = "Upload image and ask question") },
+                        modifier = Modifier.fillMaxWidth(0.83f)
 
                     )
 
@@ -149,26 +151,24 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
                         modifier = Modifier.padding(4.dp)) {
                         Icon(imageVector = Icons.Default.Send, contentDescription = "Send")
                     }
-                    
-                    AnimatedVisibility(visible = imageUris.size > 0) {
-                        LazyRow(
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            items(imageUris) { imageUri ->
-                                Column (verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally){
-                                    AsyncImage(model = imageUri, contentDescription = "",
-                                        modifier = Modifier
-                                            .padding(4.dp)
-                                            .requiredSize(50.dp))
-                                    TextButton(onClick = { imageUris.remove(imageUri) }) {
-                                        Text(text = "Remove")
-                                    }
+                }
+                AnimatedVisibility(visible = imageUris.size > 0) {
+                    LazyRow(
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        items(imageUris) { imageUri ->
+                            Column (verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally){
+                                AsyncImage(model = imageUri, contentDescription = "",
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .requiredSize(50.dp))
+                                TextButton(onClick = { imageUris.remove(imageUri) }) {
+                                    Text(text = "Remove")
                                 }
                             }
                         }
                     }
-
                 }
             }
         }
@@ -192,7 +192,7 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
                         .fillMaxWidth(),
                         shape = MaterialTheme.shapes.large
                     ) {
-                        Text(text = uiState.outputText)
+                        Text(text = uiState.outputText, modifier = Modifier.padding(16.dp))
                     }
                 }
                 is HomeUIState.Error -> {
@@ -202,7 +202,7 @@ fun HomeScreenView(uiState: HomeUIState = HomeUIState.Loading,
                         shape = MaterialTheme.shapes.large,
                         colors = CardDefaults.cardColors(contentColor = MaterialTheme.colorScheme.errorContainer)
                     ) {
-                        Text(text = uiState.error)
+                        Text(text = uiState.error, modifier = Modifier.padding(16.dp))
                     }
                 }
             }
